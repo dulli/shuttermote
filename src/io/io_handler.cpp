@@ -16,8 +16,9 @@ bool IOHandler::setup_led(int pin){
   return true;
 }
 
-bool IOHandler::setup_rotary(int pin_up, int pin_down){
-  return false;
+bool IOHandler::setup_rotary(int pin_up, int pin_down, int pin_out, int interval){
+  rotary_ = new RotaryI(pin_up, pin_down, pin_out, interval);
+  return true;
 }
 
 bool IOHandler::setup_serial(int baud){
@@ -28,18 +29,28 @@ bool IOHandler::setup_serial(int baud){
 bool IOHandler::add_commander(CommandManager* cmd){
   if(led_)    led_->cmd = cmd;
   if(serial_) serial_->cmd = cmd;
+  if(wifi_)   wifi_->cmd = cmd;
+  if(rotary_) rotary_->cmd = cmd;
   return true;
 }
 
 bool IOHandler::get(){
-  if(serial_->get())    buffer_ = serial_->read();
-  else if(wifi_->get()) buffer_ = wifi_->read();
+  if(rotary_->get())      buffer_ = rotary_->read();
+  else if(serial_->get()) buffer_ = serial_->read();
+  else if(wifi_->get())   buffer_ = wifi_->read();
   else return false;
   return true;
 }
 
 char* IOHandler::read(){
-  return buffer_;
+  char* input = (char*) malloc(strlen(buffer_) + 1);
+  strcpy(input, buffer_);
+  return input;
+}
+
+void IOHandler::clean_up(char* input){
+  free(input);
+  if(serial_) serial_->restart();
 }
 
 void IOHandler::log(const char* format, ...){
@@ -51,10 +62,6 @@ void IOHandler::log(const char* format, ...){
   va_end(args);
 
   if(serial_) serial_->log(line);
-}
-
-void IOHandler::restart(){
-  if(serial_) serial_->restart();
 }
 
 void IOHandler::heartbeat(unsigned long elapsed){
