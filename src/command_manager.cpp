@@ -36,7 +36,7 @@ bool CommandManager::fire_scheduled(){
   if(to_schedule_.size()) refresh_scheduled();
   for(Schedule cb : scheduled_){
     cb.left -= elapsed;
-    if(cb.left > 0){                // If the callback is due yet re-add it to the schedule and move on
+    if(cb.left > 0){                // If the callback is not due yet re-add it to the schedule and move on
       next_schedule.push_back(cb);
       continue;
     }
