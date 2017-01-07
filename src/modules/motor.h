@@ -43,8 +43,8 @@ private:
   int           pin_up_;
   int           pin_down_;
   int           state_;
-  int           current_time_;
-  unsigned long last_start_time_;
+  int           virtual_time_;
+  unsigned long last_time_;
 };
 
 #endif

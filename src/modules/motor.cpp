@@ -7,7 +7,7 @@ Motor::Motor(const char* name, int up, int down, int height, int close_time){
   pin_up_ = up;
   pin_down_ = down;
   state_ = STATE_STOPPED;
-  current_time_ = 0;
+  virtual_time_ = 0;
 
   const char* prefix = "motor-";
   char* id = (char*) calloc(1, strlen(prefix) + strlen(name) + 1);
@@ -51,7 +51,7 @@ bool Motor::up(unsigned long duration){
   //TODO compensate the slower motor acceleration when moving upwards
   if(state_ == STATE_STOPPED){
     state_ = STATE_UP;
-    last_start_time_ = millis();
+    last_time_ = millis();
     digitalWrite(pin_down_, RELAY_OFF);
     digitalWrite(pin_up_, RELAY_ON);
     if(duration > 0) cmd->delay(std::bind(&Motor::hold, this), duration);
@@ -70,7 +70,7 @@ bool Motor::down(Arguments args){
 bool Motor::down(unsigned long duration){
   if(state_ == STATE_STOPPED){
     state_ = STATE_DOWN;
-    last_start_time_ = millis();
+    last_time_ = millis();
     digitalWrite(pin_up_, RELAY_OFF);
     digitalWrite(pin_down_, RELAY_ON);
     if(duration > 0) cmd->delay(std::bind(&Motor::hold, this), duration);
@@ -89,23 +89,25 @@ bool Motor::hold(){
 void Motor::update_time(){
   // Keeps track of the time that would have elapsed to get into the current
   // position by adding up all "down" movements and substracting "up" movements
-  unsigned long elapsed = millis() - last_start_time_;
+  unsigned long now = millis();
+  unsigned long elapsed = now - last_time_;
   if(state_ == STATE_UP){
-    if(current_time_ < elapsed) current_time_ = 0;
-    else current_time_ -= elapsed;
+    if(virtual_time_ < elapsed) virtual_time_ = 0;
+    else virtual_time_ -= elapsed;
   }
   else if(state_ == STATE_DOWN){
-    current_time_ += elapsed;
-    if(current_time_ > close_time_) current_time_ = close_time_;
+    virtual_time_ += elapsed;
+    if(virtual_time_ > close_time_) virtual_time_ = close_time_;
   }
+  last_time_ = now;
 }
 
 bool Motor::open(){
-  return up(current_time_);
+  return up(virtual_time_);
 }
 
 bool Motor::close(){
-  return down(close_time_ - current_time_);
+  return down(close_time_ - virtual_time_);
 }
 
 bool Motor::reset(){
@@ -114,10 +116,11 @@ bool Motor::reset(){
 
 bool Motor::get_position(){
   //TODO: output the actual position
+  update_time();
   Serial.print("   ");
   Serial.print(name_);
   Serial.print(":\t");
-  Serial.println(current_time_, DEC);
+  Serial.println(virtual_time_, DEC);
   return true;
 }
 
