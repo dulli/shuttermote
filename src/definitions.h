@@ -19,7 +19,7 @@ typedef std::function<bool(Callback, unsigned long, int)> Scheduler;
 typedef std::vector<char*> Arguments;
 typedef IPAddress IP;
 
-// Platform.io shows errors when the pins are not manually defined:
+// Platform.io displays errors when the pins are not manually defined:
 namespace Pin{
   static const uint8_t BUILTIN_LED = 2;
 

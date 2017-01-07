@@ -22,9 +22,9 @@ void setup(){
 
   bool shutter_success = true;
   shutter_success &= shutters->setup_motor("Tür", Pin::D0, Pin::D5, 197 /*cm*/,
-    27 /*s*/, 27 /*s*/);
+    27 /*s*/);
   shutter_success &= shutters->setup_motor("Fenster", Pin::D7, Pin::D6, 117 /*cm*/,
-    20 /*s*/, 21/*s*/);
+    20 /*s*/);
 
   bool io_success = true;
   if(SERIAL_ENABLED) io_success &= io->setup_serial(9600 /*bps*/);

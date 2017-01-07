@@ -1,13 +1,13 @@
 #include "motor.h"
 
-Motor::Motor(const char* name, int up, int down, int height, int close_time, int open_time){
+Motor::Motor(const char* name, int up, int down, int height, int close_time){
   name_ = name;
   height_ = height;
   close_time_ = close_time * 1000;
-  open_time_ = open_time * 1000;
   pin_up_ = up;
   pin_down_ = down;
   state_ = STATE_STOPPED;
+  current_time_ = 0;
 
   const char* prefix = "motor-";
   char* id = (char*) calloc(1, strlen(prefix) + strlen(name) + 1);
@@ -33,6 +33,8 @@ bool Motor::fire(Command cmd){
   else if(strcmp(cmd.codeword, CMD_MOTOR_DOWN) == 0) success = down(cmd.args);
   else if(strcmp(cmd.codeword, CMD_MOTOR_OPEN) == 0) success = open();
   else if(strcmp(cmd.codeword, CMD_MOTOR_CLOSE) == 0) success = close();
+  else if(strcmp(cmd.codeword, CMD_MOTOR_POS) == 0) success = get_position();
+  else if(strcmp(cmd.codeword, CMD_MOTOR_RESET) == 0) success = reset();
   else success = false;
   return success;
 }
@@ -46,8 +48,10 @@ bool Motor::up(Arguments args){
 }
 
 bool Motor::up(unsigned long duration){
+  //TODO compensate the slower motor acceleration when moving upwards
   if(state_ == STATE_STOPPED){
     state_ = STATE_UP;
+    last_start_time_ = millis();
     digitalWrite(pin_down_, RELAY_OFF);
     digitalWrite(pin_up_, RELAY_ON);
     if(duration > 0) cmd->delay(std::bind(&Motor::hold, this), duration);
@@ -66,6 +70,7 @@ bool Motor::down(Arguments args){
 bool Motor::down(unsigned long duration){
   if(state_ == STATE_STOPPED){
     state_ = STATE_DOWN;
+    last_start_time_ = millis();
     digitalWrite(pin_up_, RELAY_OFF);
     digitalWrite(pin_down_, RELAY_ON);
     if(duration > 0) cmd->delay(std::bind(&Motor::hold, this), duration);
@@ -74,18 +79,46 @@ bool Motor::down(unsigned long duration){
 }
 
 bool Motor::hold(){
+  if(state_ != STATE_STOPPED) update_time();
   state_ = STATE_STOPPED;
   digitalWrite(pin_up_, RELAY_OFF);
   digitalWrite(pin_down_, RELAY_OFF);
   return true;
 }
 
+void Motor::update_time(){
+  // Keeps track of the time that would have elapsed to get into the current
+  // position by adding up all "down" movements and substracting "up" movements
+  unsigned long elapsed = millis() - last_start_time_;
+  if(state_ == STATE_UP){
+    if(current_time_ < elapsed) current_time_ = 0;
+    else current_time_ -= elapsed;
+  }
+  else if(state_ == STATE_DOWN){
+    current_time_ += elapsed;
+    if(current_time_ > close_time_) current_time_ = close_time_;
+  }
+}
+
 bool Motor::open(){
-  return up(open_time_);
+  return up(current_time_);
 }
 
 bool Motor::close(){
-  return down(close_time_);
+  return down(close_time_ - current_time_);
+}
+
+bool Motor::reset(){
+  return up(close_time_);
+}
+
+bool Motor::get_position(){
+  //TODO: output the actual position
+  Serial.print("   ");
+  Serial.print(name_);
+  Serial.print(":\t");
+  Serial.println(current_time_, DEC);
+  return true;
 }
 
 char* Motor::get_id(){

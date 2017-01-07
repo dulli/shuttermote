@@ -12,12 +12,14 @@ bool Shutters::fire(Command cmd){
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_DOWN) == 0) success = down(cmd.args);
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_OPEN) == 0) success = open();
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_CLOSE) == 0) success = close();
+  else if(strcmp(cmd.codeword, CMD_SHUTTERS_POS) == 0) success = get_position();
+  else if(strcmp(cmd.codeword, CMD_SHUTTERS_RESET) == 0) success = reset();
   else success = false;
   return success;
 }
 
-bool Shutters::setup_motor(const char* name, int up, int down, int height, int close_time, int open_time){
-  Motor* motor = new Motor(name, up, down, height, close_time, open_time);
+bool Shutters::setup_motor(const char* name, int up, int down, int height, int close_time){
+  Motor* motor = new Motor(name, up, down, height, close_time);
   motors_.push_back(motor);
   return true;
 }
@@ -49,6 +51,18 @@ bool Shutters::open(){
 bool Shutters::close(){
   bool success = true;
   for(Motor* motor : motors_) success &=  motor->close();
+  return success;
+}
+
+bool Shutters::reset(){
+  bool success = true;
+  for(Motor* motor : motors_) success &=  motor->reset();
+  return success;
+}
+
+bool Shutters::get_position(){
+  bool success = true;
+  for(Motor* motor : motors_) success &=  motor->get_position();
   return success;
 }
 

@@ -9,17 +9,21 @@
 #define CMD_SHUTTERS_HOLD    "hold"
 #define CMD_SHUTTERS_OPEN    "open"
 #define CMD_SHUTTERS_CLOSE   "close"
+#define CMD_SHUTTERS_POS     "position"
+#define CMD_SHUTTERS_RESET   "reset"
 
 class Shutters : public Module {
 public:
   Shutters();
   bool fire(Command cmd) override;
-  bool setup_motor(const char* name, int up, int down, int height, int close_time, int open_time);
+  bool setup_motor(const char* name, int up, int down, int height, int close_time);
   bool up(Arguments args);
   bool down(Arguments args);
   bool hold();
   bool open();
   bool close();
+  bool reset();
+  bool get_position();
   std::vector<Motor*> get_motors();
 
 private:

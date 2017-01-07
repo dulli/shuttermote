@@ -35,7 +35,8 @@ bool CommandManager::fire_scheduled(){
   std::vector<Schedule> next_schedule;
   if(to_schedule_.size()) refresh_scheduled();
   for(Schedule cb : scheduled_){
-    cb.left -= elapsed;
+    if(elapsed > cb.left) cb.left = 0;
+    else cb.left -= elapsed;
     if(cb.left > 0){                // If the callback is not due yet re-add it to the schedule and move on
       next_schedule.push_back(cb);
       continue;
