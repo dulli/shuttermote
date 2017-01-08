@@ -23,8 +23,10 @@ public:
   bool open();
   bool close();
   bool reset();
-  bool get_position();
+  bool position(Arguments args);
   std::vector<Motor*> get_motors();
+  // TODO implement a method to sync multiple motors to either the lowest/highest
+  //      position or somewhere in between
 
 private:
   std::vector<Motor*> motors_;

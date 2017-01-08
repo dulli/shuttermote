@@ -12,7 +12,7 @@ bool Shutters::fire(Command cmd){
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_DOWN) == 0) success = down(cmd.args);
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_OPEN) == 0) success = open();
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_CLOSE) == 0) success = close();
-  else if(strcmp(cmd.codeword, CMD_SHUTTERS_POS) == 0) success = get_position();
+  else if(strcmp(cmd.codeword, CMD_SHUTTERS_POS) == 0) success = position(cmd.args);
   else if(strcmp(cmd.codeword, CMD_SHUTTERS_RESET) == 0) success = reset();
   else success = false;
   return success;
@@ -60,9 +60,9 @@ bool Shutters::reset(){
   return success;
 }
 
-bool Shutters::get_position(){
+bool Shutters::position(Arguments args){
   bool success = true;
-  for(Motor* motor : motors_) success &=  motor->get_position();
+  for(Motor* motor : motors_) success &=  motor->position(args);
   return success;
 }
 

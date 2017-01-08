@@ -50,7 +50,6 @@ void setup(){
   Callback heartbeat = std::bind(&IOHandler::heartbeat, io, _1);
   commander->interval(heartbeat, 30000 /*ms*/);
   // TODO fix the logging module to actually be useful
-  // TODO keep track of the current shutter position
 }
 
 void loop(){

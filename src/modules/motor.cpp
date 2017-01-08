@@ -33,7 +33,7 @@ bool Motor::fire(Command cmd){
   else if(strcmp(cmd.codeword, CMD_MOTOR_DOWN) == 0) success = down(cmd.args);
   else if(strcmp(cmd.codeword, CMD_MOTOR_OPEN) == 0) success = open();
   else if(strcmp(cmd.codeword, CMD_MOTOR_CLOSE) == 0) success = close();
-  else if(strcmp(cmd.codeword, CMD_MOTOR_POS) == 0) success = get_position();
+  else if(strcmp(cmd.codeword, CMD_MOTOR_POS) == 0) success = position(cmd.args);
   else if(strcmp(cmd.codeword, CMD_MOTOR_RESET) == 0) success = reset();
   else success = false;
   return success;
@@ -48,7 +48,7 @@ bool Motor::up(Arguments args){
 }
 
 bool Motor::up(unsigned long duration){
-  //TODO compensate the slower motor acceleration when moving upwards
+  //TODO compensate for the lower motor acceleration when moving upwards
   if(state_ == STATE_STOPPED){
     state_ = STATE_UP;
     last_time_ = millis();
@@ -114,14 +114,31 @@ bool Motor::reset(){
   return up(close_time_);
 }
 
+bool Motor::position(Arguments args){
+  //TODO differentiate between a state that only closes the shutters until they
+  //     are all the way at the bottom and a state at which the holes between
+  //     the panels are also closed
+  unsigned long percentage;
+  if(args.empty()) return get_position();
+  else percentage = strtoul(args[0], NULL, 10); // in s
+  return set_position(percentage);
+}
+
 bool Motor::get_position(){
-  //TODO: output the actual position
+  // TODO use the logging module instead of prints
   update_time();
   Serial.print("   ");
   Serial.print(name_);
   Serial.print(":\t");
-  Serial.println(virtual_time_, DEC);
+  Serial.println(100 * virtual_time_ / close_time_, DEC);
   return true;
+}
+
+bool Motor::set_position(unsigned short percentage){
+  unsigned long target_time = close_time_ * percentage / 100;
+  int delta = target_time - virtual_time_;
+  if(delta < 0) return up(-delta);
+  else return down(delta);
 }
 
 char* Motor::get_id(){

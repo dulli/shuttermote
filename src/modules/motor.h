@@ -31,7 +31,9 @@ public:
   bool open();
   bool close();
   bool reset();
+  bool position(Arguments args);
   bool get_position();
+  bool set_position(unsigned short percentage);
   char* get_id();
   void update_time();
 
